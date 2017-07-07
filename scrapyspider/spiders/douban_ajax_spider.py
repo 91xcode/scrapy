@@ -6,12 +6,12 @@ import json
 
 
 from scrapy import Request
-from scrapy.spiders import Spider
+import scrapy
 from scrapyspider.items import DoubanMovieItem
 from scrapy import log
 
 
-class DoubanAJAXSpider(Spider):
+class DoubanAJAXSpider(scrapy.Spider):
     name = 'douban_ajax'
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',

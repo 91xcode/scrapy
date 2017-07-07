@@ -15,8 +15,15 @@ NEWSPIDER_MODULE = 'scrapyspider.spiders'
 
 
 ITEM_PIPELINES={
-    'scrapyspider.pipelines.DoPipeline':300,
+    'scrapyspider.pipelines.MySQLStorePipeline':300,
+	'scrapyspider.pipelines.JsonWithEncodingPipeline':300,
 }
+
+
+MYSQL_HOST = 'localhost'
+MYSQL_DBNAME = 'liu'
+MYSQL_USER = 'root'
+MYSQL_PASSWD = ''
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'scrapyspider (+http://www.yourdomain.com)'
