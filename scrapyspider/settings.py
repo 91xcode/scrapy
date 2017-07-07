@@ -13,5 +13,10 @@ BOT_NAME = 'scrapyspider'
 SPIDER_MODULES = ['scrapyspider.spiders']
 NEWSPIDER_MODULE = 'scrapyspider.spiders'
 
+
+ITEM_PIPELINES={
+    'scrapyspider.pipelines.DoPipeline':300,
+}
+
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'scrapyspider (+http://www.yourdomain.com)'

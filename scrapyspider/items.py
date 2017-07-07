@@ -17,3 +17,5 @@ class DoubanMovieItem(scrapy.Item):
     score = scrapy.Field()
     # 评论人数
     score_num = scrapy.Field()
+    # 封面
+    img = scrapy.Field()

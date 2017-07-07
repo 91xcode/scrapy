@@ -31,6 +31,9 @@ class DoubanMovieTop250Spider(scrapy.Spider):
             ).extract()[0]
             item['score_num'] = movie.xpath(
                 './/div[@class="star"]/span/text()').re(ur'(\d+)人评价')[0]
+            item['img'] = movie.xpath(
+                '//*[@class="pic"]/a/img/@src').extract()[0]
+
             yield item
 
             log.msg("Appending item...", level='INFO')
