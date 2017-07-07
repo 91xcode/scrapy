@@ -6,6 +6,19 @@ Scrapy新手教程
 ```
 
 ```
+遇到的问题:
+    爬虫抓取到的数据写入数据库时,即使做了唯一约束判断,还是会有重复的数据进入数据库
+    解决办法:
+    import copy
+
+    #对象拷贝，深拷贝
+    asynItem = copy.deepcopy(item)
+    query = self.dbpool.runInteraction(self._Cate_insert,asynItem)
+
+    引用传参的问题
+```
+
+```
 第一步:创建项目
 scrapy startproject scrapyspider
 该命令将会创建包含下列内容的scrapyspider目录:
