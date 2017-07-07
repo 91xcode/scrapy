@@ -63,7 +63,8 @@ class BlogSpider(scrapy.Spider):
    
 进入项目目录,执行下面
 scrapy crawl first_test
-
+或者
+scrapy crawl first_test -o douban.json
 会看到如下信息:
 
 2017-07-07 18:55:00+0800 [scrapy] INFO: Scrapy 0.24.4 started (bot: scrapyspider)
@@ -178,7 +179,7 @@ class DoubanMovieTop250Spider(scrapy.Spider):
 
 ```
 进入项目目录,执行下面
-scrapy crawl douban_movie_top250
+scrapy crawl douban_movie_top250 或者  scrapy crawl douban_movie_top250 -o douban.json
 会看到
 2017-07-07 19:09:57+0800 [douban_movie_top250] DEBUG: Scraped from <200 https://movie.douban.com/top250?start=225&filter=>
 	{'movie_name': u'\u5f57\u661f\u6765\u7684\u90a3\u4e00\u591c',
