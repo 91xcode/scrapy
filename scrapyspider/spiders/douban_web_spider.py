@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-from scrapy import Request
+
 import scrapy
 from scrapyspider.items import DoubanMovieItem
+from scrapy import log
+from scrapy import Request
 
 
 class DoubanMovieTop250Spider(scrapy.Spider):
@@ -31,7 +33,15 @@ class DoubanMovieTop250Spider(scrapy.Spider):
                 './/div[@class="star"]/span/text()').re(ur'(\d+)人评价')[0]
             yield item
 
+            log.msg("Appending item...", level='INFO')
+
+        log.msg("Append done.", level='INFO')
+
+
+
         next_url = response.xpath('//span[@class="next"]/a/@href').extract()
         if next_url:
+
             next_url = 'https://movie.douban.com/top250' + next_url[0]
+            log.msg("Start Get next_url,next_url:%s" % next_url, level='INFO')
             yield Request(next_url, headers=self.headers)
