@@ -134,6 +134,8 @@ class DoubanMovieItem(scrapy.Item):
     score = scrapy.Field()
     # 评论人数
     score_num = scrapy.Field()
+    # 封面
+    img = scrapy.Field()
  
 新建文件douban_web_spider.py 在scrapyspider/spiders目录下:
 # -*- coding: utf-8 -*-
@@ -169,6 +171,9 @@ class DoubanMovieTop250Spider(scrapy.Spider):
             ).extract()[0]
             item['score_num'] = movie.xpath(
                 './/div[@class="star"]/span/text()').re(ur'(\d+)人评价')[0]
+            item['img'] = movie.xpath(
+                '//*[@class="pic"]/a/img/@src').extract()[0]
+
             yield item
 
             log.msg("Appending item...", level='INFO')
@@ -226,4 +231,135 @@ scrapy crawl douban_movie_top250
 	 'scheduler/enqueued/memory': 10,
 	 'start_time': datetime.datetime(2017, 7, 7, 11, 9, 55, 405693)}
 2017-07-07 19:09:57+0800 [douban_movie_top250] INFO: Spider closed (finished)
+```
+
+
+```
+将爬取的数据写到数据库中
+
+先建一张表:
+    CREATE TABLE `liu`.`doubanmoive` (
+        `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+        `movie_name` varchar(255) DEFAULT '',
+        `ranking` varchar(255),
+        `score` varchar(255),
+        `score_num` varchar(255),
+        `img` text,
+        PRIMARY KEY (`id`)
+    ) DEFAULT CHARACTER SET utf8 COMMENT=''
+
+然后修改pipelines.py
+
+    # -*- coding: utf-8 -*-
+    
+    # Define your item pipelines here
+    #
+    # Don't forget to add your pipeline to the ITEM_PIPELINES setting
+    # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
+    
+    
+    #class DoubanmoivePipeline(object):
+    #    def process_item(self, item, spider):
+    #        return item
+    
+    import json
+    import codecs
+    
+    from scrapy import log
+    from twisted.enterprise import adbapi
+    from scrapy.http import Request
+    
+    import urllib
+    import MySQLdb
+    import MySQLdb.cursors
+    
+    
+    class ScrapyspiderPipeline(object):
+        def process_item(self, item, spider):
+            return item
+    
+    '''保存文件'''
+    class SavePipeline(object):
+        def __init__(self):
+            self.file = codecs.open('save_data.json', mode='wb', encoding='utf-8')
+    
+        def process_item(self, item, spider):
+            line = json.dumps(dict(item)) + '\n'
+            self.file.write(line.decode("unicode_escape"))
+            return item
+    
+    '''数据写到数据库'''
+    class DoPipeline(object):
+        def __init__(self):
+            self.dbpool = adbapi.ConnectionPool('MySQLdb',
+                    db = 'liu',
+                    user = 'root',
+                    passwd = '',
+                    cursorclass = MySQLdb.cursors.DictCursor,
+                    charset = 'utf8',
+                    use_unicode = False
+            )
+        def process_item(self, item, spider):
+            query = self.dbpool.runInteraction(self._conditional_insert, item)
+            query.addErrback(self.handle_error)
+            return item
+    
+        def _conditional_insert(self,tx,item):
+            tx.execute("select * from doubanmoive where ranking= %s",(item['ranking']))
+            result=tx.fetchone()
+            log.msg("result", level='INFO')
+            print result
+            if result:
+                log.msg("Item already stored in db:%s" % item, level='INFO')
+            else:
+    
+                #获取海报下载地址
+                site= item['img']           #截取海报地址的最后一个/,生成本地的文件名
+                str = site.split('/');
+                print str
+                path = str[-1]
+                print 'local img path %s'%(path)
+                #开始下载海报
+                print '--------------------download img %s'%(site)
+                data = urllib.urlopen(site).read()
+                newfile = open(path,"wb")
+                newfile.write(data)
+                newfile.close()
+                tx.execute(\
+                    "insert into doubanmoive (movie_name,ranking,score,score_num,img) values (%s,%s,%s,%s,%s)",\
+                     ("".join(item['movie_name']), "".join(item['ranking']), "".join(item['score']), "".join(item['score_num']), "".join(item['img'])))
+                log.msg("Item stored in db: %s" % item, level='INFO')
+        def handle_error(self, e):
+            log.err(e)
+    
+        
+然后 修改settings.py
+    # -*- coding: utf-8 -*-
+    
+    # Scrapy settings for scrapyspider project
+    #
+    # For simplicity, this file contains only the most important settings by
+    # default. All the other settings are documented here:
+    #
+    #     http://doc.scrapy.org/en/latest/topics/settings.html
+    #
+    
+    BOT_NAME = 'scrapyspider'
+    
+    SPIDER_MODULES = ['scrapyspider.spiders']
+    NEWSPIDER_MODULE = 'scrapyspider.spiders'
+    
+    
+    ITEM_PIPELINES={
+        'scrapyspider.pipelines.DoPipeline':300,
+    }
+    
+    # Crawl responsibly by identifying yourself (and your website) on the user-agent
+    #USER_AGENT = 'scrapyspider (+http://www.yourdomain.com)'
+
+
+```
+
+```
+然后执行 scrapy crawl douban_movie_top250
 ```
